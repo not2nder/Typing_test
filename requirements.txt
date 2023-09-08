@@ -1,0 +1,4 @@
+keyboard==0.13.5
+pick==2.2.0
+Requests==2.31.0
+rich==13.5.2

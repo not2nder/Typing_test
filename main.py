@@ -11,16 +11,14 @@ from rich.console import Console
 from rich.columns import Columns
 
 import keyboard
-from dotenv import load_dotenv
 
 from pick import pick
-
-from test import get_lyrics
 
 import webbrowser
 
 console = Console()
-load_dotenv()
+
+terminal_size = (os.get_terminal_size().columns)-1
 
 def request_words(qtd:int, lan:str) -> str:
     url = f"https://word-generator-api.not2nder1.repl.co/{qtd}-{lan}"
@@ -39,60 +37,27 @@ def voltar():
 
 def test(qtd:int,lan:str) -> dict:
     words = request_words(qtd,lan)
-    print(Panel.fit(f"\n{words}\n",title="[i][b]Comece a Escrever:"))
+    print(Panel.fit(f"\n{words}\n",title="[i][b]Comece a Escrever:",width=terminal_size))
     st = time.time()
-    user_input = input(": ")
+    u_input = input(": ")
     end = time.time()
     elapsed = end-st
+
+    if len(words) > len(u_input):
+        certas = int(len([i for i in range(len(u_input)) if u_input[i] == words[i]]))
+    else:
+        certas = int(len([i for i in range(len(words)) if words[i] == u_input[i]]))
 
     return {
         "qtd":qtd,
         "lan":lan,
         "elapsed":elapsed,
         "words":words,
-        "input":user_input
-    }
-
-def get_statistics(test:dict) -> dict:
-    words = test['words']
-    u_input = test['input']
-    time = test['elapsed']
-
-    if len(words) > len(u_input):
-        certas = int(len([i for i in range(len(u_input)) if u_input[i] == words[i]]))
-    else:
-        certas = int(len([i for i in range(len(words)) if words[i] == u_input[i]]))
-    data = {
-        "qtd":test['qtd'],
-        "lan":test['lan'],
-        "input":input,
-        "words":words,
-        "elapsed":time,
-        "wps":certas//time,
+        "input":u_input,
+        "wps":certas//elapsed,
         "acc":(certas/len(words))*100,
         "err":((len(words)-certas)/len(words))*100
     }
-    return data
-
-def music_test():
-    print("Digite: (Artista-Musica)".center(50))
-    song_name, artist_name = input("").split("-")
-    os.system('cls')
-    api_key = os.getenv("API_KEY")
-    lyrics = get_lyrics(api_key, song_name, artist_name)
-    print(Panel.fit(lyrics,title=f"{song_name} - {artist_name}",width=50,padding=(2,2)))
-
-    song_lines = [line for line in lyrics.split("\n") if line != ""]
-    user_lines = []
-    for i in range(len(song_lines)):
-        u_input = input("")
-        user_lines.append(u_input)
-    
-    for i in range(len(user_lines)):
-        print(check_words(user_lines[i],song_lines[i]))
-
-    words = '\n'.join([check_words(user_lines[i],song_lines[i]) for i in range(len(user_lines))])
-    print(Panel(words,padding=(2,2),title="Resultados",width=50))
 
 def check_words(word: str, input_str: str) -> str:
     new_string = ""
@@ -116,12 +81,12 @@ def check_words(word: str, input_str: str) -> str:
 def set_history(results:dict):
     all_data = []
     try:
-        with open("data.json","r") as file:
+        with open("data\data.json","r") as file:
             all_data = json.load(file)
     except:
         pass
     all_data.append(results) 
-    with open("data.json","w") as file:
+    with open("data\data.json","w") as file:
         json.dump(all_data,file,indent=4)
         
 def get_results(results:dict):
@@ -158,7 +123,7 @@ def api():
 
 def menu():
     os.system('cls')
-    title = " "
+    title = "Typing Test"
     options = ["Teste","Histórico","API","Github","Sair"]
     op = escolha(options,title,'•')
 
@@ -166,7 +131,8 @@ def menu():
         "Teste":select_test,
         "API": api,
         "Github": github,
-        "Histórico":see_his
+        "Histórico":see_his,
+        "Sair":exit
     }
     if op in commands:
         func = commands[op]
@@ -176,14 +142,14 @@ def typerace(qtd,lan):
     race = test(qtd,lan)
     time.sleep(1)
     os.system('cls')
-    get_results(results=get_statistics(race))
+    get_results(race)
 
 def select_test():
     os.system('cls')
     title = "ESCOLHA SEU IDIOMA"
     options = ["EN","PT"]
     idioma = escolha(options,title,'•')
-    quant = escolha([3,10,20,50],"Quantidade",'•')
+    quant = escolha([10,20,30,50,100],"Quantidade",'•')
     typerace(int(quant),str(idioma).lower())
     
 def see_his():
@@ -191,7 +157,7 @@ def see_his():
     time.sleep(0.6)
     print(f"[b][i]{'HISTÓRICO'.center(50)}")
     time.sleep(1)
-    with open("data.json","r") as file:
+    with open("data\data.json","r") as file:
         content = json.load(file)
         for data in content:
             panel = Panel(f"Teste: [bold]{data['words']}[/bold]\n \nRecebido: {check_words(data['words'],data['input'])} \n\nTempo: {float(data['elapsed']):.2f}\nPPS: {data['wps']}\nPrecisão: {float(data['acc']):.2f}\nTaxa de Erro: {data['err']}"
@@ -200,4 +166,5 @@ def see_his():
                           width=50)
             console.print(panel)
     voltar()
+
 menu()

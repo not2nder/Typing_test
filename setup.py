@@ -1,0 +1,8 @@
+"""EXECUTAR APENAS NA PRIMEIRA INSTALAÇÃO"""
+import os
+
+input("Vamos instalar toas as dependências Python \nAperte [ENTER] para prosseguir ")
+os.system("pip install -U -r requirements.txt")
+
+print("\nTudo certo! aproveite o uso da aplicação")
+os.system("py main.py")
